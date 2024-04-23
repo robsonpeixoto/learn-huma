@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/spf13/cobra"
 
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
@@ -67,12 +68,14 @@ func addRoutes(api huma.API) {
 }
 
 func main() {
+
+	var api huma.API
 	// Create a CLI app which takes a port option.
 	cli := humacli.New(func(hooks humacli.Hooks, options *Options) {
 		// Create a new router & API
 		router := http.NewServeMux()
 
-		api := humago.New(router, huma.DefaultConfig("My API", "1.0.0"))
+		api = humago.New(router, huma.DefaultConfig("My API", "1.0.0"))
 		addRoutes(api)
 
 		server := &http.Server{
@@ -88,6 +91,15 @@ func main() {
 			fmt.Println("Shutdown http server")
 			server.Shutdown(context.Background())
 		})
+	})
+
+	cli.Root().AddCommand(&cobra.Command{
+		Use:   "openapi",
+		Short: "Print the OpenAPI spec",
+		Run: func(cmd *cobra.Command, args []string) {
+			b, _ := api.OpenAPI().YAML()
+			fmt.Println(string(b))
+		},
 	})
 
 	// Run the CLI. When passed no commands, it starts the server.
