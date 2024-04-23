@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/spf13/cobra"
@@ -101,7 +102,9 @@ func main() {
 		})
 		hooks.OnStop(func() {
 			fmt.Println("Shutdown http server")
-			server.Shutdown(context.Background())
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			server.Shutdown(ctx)
 		})
 	})
 
