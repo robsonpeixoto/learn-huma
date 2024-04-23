@@ -76,6 +76,18 @@ func main() {
 		router := http.NewServeMux()
 
 		api = humago.New(router, huma.DefaultConfig("My API", "1.0.0"))
+		api.UseMiddleware(func(ctx huma.Context, next func(huma.Context)) {
+			// If there is a query parameter "error=true", then return an error
+			if ctx.Query("error") == "true" {
+				huma.WriteErr(api, ctx, http.StatusInternalServerError,
+					"Some friendly message", fmt.Errorf("error detail"),
+				)
+				return
+			}
+
+			// Otherwise, just continue as normal
+			next(ctx)
+		})
 		addRoutes(api)
 
 		server := &http.Server{
